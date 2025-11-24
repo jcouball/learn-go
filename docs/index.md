@@ -21,4 +21,8 @@ make docs        # Build static site to site/
 make docs-serve  # Start live-reload dev server at http://127.0.0.1:8000
 ```
 
-The documentation is organized into chapters that mirror the book structure. See the `docs/` directory for the source files.
+## Chapters
+
+- [Chapter 1: Setting Up Your Environment](ch01.md)
+- [Chapter 2: Predeclared Types and Declarations](ch02.md)
+- [Chapter 3: Composite Types](ch03.md)
