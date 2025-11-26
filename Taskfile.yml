@@ -1,0 +1,230 @@
+version: '3'
+
+vars:
+  GO: go
+  BIN_DIR: bin
+  MKDOCS:
+    sh: asdf which python
+  MODULE:
+    sh: go list -m -f '{{.Path}}'
+  ALL_PKGS:
+    sh: go list ./...
+  MAIN_PKGS:
+    sh: go list -f '{{if eq .Name "main"}}{{.ImportPath}}{{end}}' ./... | grep -v '^$'
+
+tasks:
+  default:
+    desc: Show available tasks
+    cmds:
+      - task --list
+    silent: true
+
+  setup:
+    desc: Verify dependencies and initialize the project
+    cmds:
+      - |
+        echo "Verifying dependencies..."
+
+        # Check Go
+        if ! command -v go &> /dev/null; then
+          echo "❌ Go is not installed. Please install Go first."
+          echo "   brew install go"
+          exit 1
+        fi
+        echo "✓ Go $(go version | awk '{print $3}')"
+
+        # Check Python
+        if ! command -v python3 &> /dev/null; then
+          echo "❌ Python 3 is not installed. Please install Python first."
+          echo "   brew install python"
+          exit 1
+        fi
+        echo "✓ Python $(python3 --version | awk '{print $2}')"
+
+        # Check pip
+        if ! command -v pip &> /dev/null && ! command -v pip3 &> /dev/null; then
+          echo "❌ pip is not installed. Please install pip first."
+          exit 1
+        fi
+        echo "✓ pip installed"
+
+        echo ""
+        echo "Installing Python dependencies..."
+        pip install -r requirements.txt
+
+        echo ""
+        echo "Installing Go dependencies..."
+        go mod tidy
+
+        echo ""
+        echo "✅ Setup complete! Run 'task' to see available commands."
+    silent: true
+
+  fmt:
+    desc: gofmt every package
+    cmds:
+      - go fmt ./...
+    silent: true
+
+  vet:
+    desc: go vet ./...
+    cmds:
+      - go vet ./...
+    silent: true
+
+  test:
+    desc: go test ./...
+    cmds:
+      - go test -cover ./...
+    silent: true
+
+  tidy:
+    desc: go mod tidy
+    cmds:
+      - go mod tidy
+    silent: true
+
+  examples:
+    desc: list example packages
+    cmds:
+      - |
+        # First pass: collect all entries and find max width for binary column
+        declare -a binaries
+        declare -a packages
+        max_bin_width=6  # minimum for "Binary" header
+        while read pkg; do
+          safe_name=$(echo "$pkg" | sed "s|^{{.MODULE}}/||; s|^./||; s|/|-|g")
+          pkg_path=$(echo "$pkg" | sed "s|^{{.MODULE}}/||; s|^./||")
+          bin_path="{{.BIN_DIR}}/$safe_name"
+          binaries+=("$bin_path")
+          packages+=("$pkg_path")
+
+          bin_len=${#bin_path}
+          [ $bin_len -gt $max_bin_width ] && max_bin_width=$bin_len
+        done < <(go list -f '{{if eq .Name "main"}}{{.ImportPath}}{{end}}' ./... | grep -v '^$')
+
+        # Print header
+        printf "%-${max_bin_width}s  %s\n" "Binary" "Package"
+
+        # Print data rows
+        for i in "${!binaries[@]}"; do
+          printf "%-${max_bin_width}s  %s\n" "${binaries[$i]}" "${packages[$i]}"
+        done
+    silent: true
+
+  build-examples:
+    desc: build all example packages
+    cmds:
+      - for: { var: MAIN_PKGS_LIST }
+        task: build-one
+        vars:
+          PKG: '{{.ITEM}}'
+    vars:
+      MAIN_PKGS_LIST:
+        sh: go list -f '{{if eq .Name "main"}}{{.ImportPath}}{{end}}' ./... | grep -v '^$'
+
+  build-one:
+    internal: true
+    cmds:
+      - mkdir -p {{.BIN_DIR}}
+      - |
+        safe_name=$(echo "{{.PKG}}" | sed "s|^{{.MODULE}}/||; s|^./||; s|/|-|g")
+        pkg_path=$(echo "{{.PKG}}" | sed "s|^{{.MODULE}}|.|")
+        echo "Building $pkg_path..."
+        go build -o {{.BIN_DIR}}/$safe_name $pkg_path
+    silent: true
+    requires:
+      vars: [PKG]
+
+  run-examples:
+    desc: run all example packages
+    cmds:
+      - for: { var: MAIN_PKGS_LIST }
+        task: run-one
+        vars:
+          PKG: '{{.ITEM}}'
+    vars:
+      MAIN_PKGS_LIST:
+        sh: go list -f '{{if eq .Name "main"}}{{.ImportPath}}{{end}}' ./... | grep -v '^$'
+
+  run-one:
+    internal: true
+    cmds:
+      - |
+        pkg_path=$(echo "{{.PKG}}" | sed "s|^{{.MODULE}}|.|")
+        echo "Running $pkg_path..."
+        go run $pkg_path
+    silent: true
+    requires:
+      vars: [PKG]
+
+  ci:
+    desc: fmt, vet, test, build-examples
+    cmds:
+      - task: fmt
+      - task: vet
+      - task: test
+      - task: build-examples
+
+  docs:
+    desc: build MkDocs site
+    cmds:
+      - '{{.MKDOCS}} -m mkdocs build'
+    silent: true
+
+  docs-serve:
+    desc: serve MkDocs with live reload
+    cmds:
+      - PYTHON_GIL=1 {{.MKDOCS}} -m mkdocs serve
+    silent: true
+
+  clean:
+    desc: remove bin/ and site/
+    cmds:
+      - rm -rf {{.BIN_DIR}} site
+    silent: true
+
+  # Individual build tasks (similar to build-ch01-hello_world pattern)
+  # These can be called with: task build -- ./ch01/hello_world
+  # Or with env var: task build PKG=./ch01/hello_world
+  build:
+    desc: "Build a specific main package (usage: task build -- ch02/ex01 or ./ch02/ex01)"
+    cmds:
+      - mkdir -p {{.BIN_DIR}}
+      - |
+        pkg="{{.PKG}}"
+        if [ -z "$pkg" ]; then
+          pkg="{{.CLI_ARGS}}"
+        fi
+        if [ -z "$pkg" ]; then
+          echo "Error: Please specify a package. Usage: task build -- ch01/hello_world"
+          exit 1
+        fi
+        # Normalize path: add ./ prefix if not present
+        if [[ "$pkg" != ./* ]]; then
+          pkg="./$pkg"
+        fi
+        safe_name=$(echo "$pkg" | sed "s|^./||; s|/|-|g")
+        echo "Building $pkg..."
+        go build -o {{.BIN_DIR}}/$safe_name $pkg
+    silent: true
+
+  run:
+    desc: "Run a specific main package (usage: task run -- ch01/hello_world or ./ch01/hello_world)"
+    cmds:
+      - |
+        pkg="{{.PKG}}"
+        if [ -z "$pkg" ]; then
+          pkg="{{.CLI_ARGS}}"
+        fi
+        if [ -z "$pkg" ]; then
+          echo "Error: Please specify a package. Usage: task run -- ch01/hello_world"
+          exit 1
+        fi
+        # Normalize path: add ./ prefix if not present
+        if [[ "$pkg" != ./* ]]; then
+          pkg="./$pkg"
+        fi
+        echo "Running $pkg..."
+        go run $pkg
+    silent: true
