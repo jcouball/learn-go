@@ -61,7 +61,7 @@ This will:
 The repository mirrors the book's progression:
 
 1. Each chapter lives in `chNN/` (for example, `ch03/`) and every topic or exercise resides in its own folder with a small `package main` program.
-2. Run `task examples` to see all runnable packages and their binary names.
+2. Run `task list-examples` to see all runnable packages and their binary names.
 3. Execute a single sample with `task run -- ch03/slices`, build everything with `task build-examples`, or run `task ci` to format, vet, test, and build before commits.
 
 ### Common Commands
@@ -71,7 +71,7 @@ The repository mirrors the book's progression:
 task
 
 # List all example packages
-task examples
+task list-examples
 
 # Run a specific package
 task run -- ch03/slices

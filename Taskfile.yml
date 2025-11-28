@@ -84,7 +84,7 @@ tasks:
       - go mod tidy
     silent: true
 
-  examples:
+  list-examples:
     desc: list example packages
     cmds:
       - |
