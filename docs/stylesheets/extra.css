@@ -1,0 +1,6 @@
+/* Prevent navigation items from wrapping - use ellipsis instead */
+.md-nav__link {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
