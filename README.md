@@ -11,6 +11,7 @@ Install the following tools to work with this repository:
 - **Go** - The Go programming language
 - **Task** - Modern task runner (replaces Make)
 - **Python 3** - Required for MkDocs documentation generator
+- **Vale** - Prose linter for documentation
 
 The instructions below use [Homebrew](https://brew.sh/) for macOS, but you can install these tools using any package manager or installation method you prefer.
 
@@ -42,6 +43,15 @@ brew install python
 # Or use asdf, pyenv, or download from https://www.python.org/
 ```
 
+**Vale** - Prose linter for documentation
+
+```bash
+# macOS with Homebrew
+brew install vale
+
+# Or download from https://vale.sh/
+```
+
 ### Setup
 
 After cloning the repository, run the setup task to verify dependencies and initialize the project:
@@ -52,9 +62,10 @@ task setup
 
 This will:
 
-- Verify that Go and Python 3 are installed
+- Verify that Go, Python 3, and Vale are installed
 - Install MkDocs and Python dependencies from `requirements.txt`
 - Install Go dependencies with `go mod tidy`
+- Sync Vale styles with `vale sync`
 
 ## Working with the Example Code
 
@@ -89,7 +100,8 @@ task run-examples
 task fmt         # Format code
 task vet         # Run go vet
 task test        # Run tests with coverage
-task ci          # Run fmt, vet, test, and build-examples
+task prose-lint  # Run Vale on documentation
+task ci          # Run fmt, vet, test, prose-lint, and build-examples
 
 # Clean build artifacts
 task clean

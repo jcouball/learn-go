@@ -48,6 +48,14 @@ tasks:
         fi
         echo "✓ pip installed"
 
+        # Check Vale
+        if ! command -v vale &> /dev/null; then
+          echo "❌ Vale is not installed. Please install Vale first."
+          echo "   brew install vale"
+          exit 1
+        fi
+        echo "✓ Vale $(vale --version | head -1)"
+
         echo ""
         echo "Installing Python dependencies..."
         pip install -r requirements.txt
@@ -55,6 +63,10 @@ tasks:
         echo ""
         echo "Installing Go dependencies..."
         go mod tidy
+
+        echo ""
+        echo "Syncing Vale styles..."
+        vale sync
 
         echo ""
         echo "✅ Setup complete! Run 'task' to see available commands."
@@ -82,6 +94,12 @@ tasks:
     desc: go mod tidy
     cmds:
       - go mod tidy
+    silent: true
+
+  prose-lint:
+    desc: run Vale prose linter on documentation
+    cmds:
+      - vale docs/
     silent: true
 
   list-examples:
@@ -159,11 +177,12 @@ tasks:
       vars: [PKG]
 
   ci:
-    desc: fmt, vet, test, build-examples
+    desc: fmt, vet, test, prose-lint, build-examples
     cmds:
       - task: fmt
       - task: vet
       - task: test
+      - task: prose-lint
       - task: build-examples
 
   docs:
