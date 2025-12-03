@@ -28,6 +28,12 @@ jobs:
         run: |
           sh -c "$(curl --location https://taskfile.dev/install.sh)" -- -d -b /usr/local/bin
 
+      - name: Install Vale
+        run: |
+          wget https://github.com/errata-ai/vale/releases/latest/download/vale_Linux_64-bit.tar.gz
+          sudo tar -xzf vale_Linux_64-bit.tar.gz -C /usr/local/bin vale
+          rm vale_Linux_64-bit.tar.gz
+
       - name: Install dependencies
         run: |
           pip install -r requirements.txt
