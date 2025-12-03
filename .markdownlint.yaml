@@ -1,0 +1,11 @@
+# Markdownlint configuration
+# See https://github.com/DavidAnson/markdownlint/blob/main/doc/Rules.md
+
+# MD013: Line length
+# Allow up to 90 characters per line
+MD013:
+  line_length: 90
+
+# MD046: Code block style
+# Disabled because MkDocs Material admonitions with blank lines trigger false positives
+MD046: false
