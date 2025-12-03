@@ -4,7 +4,7 @@ vars:
   GO: go
   BIN_DIR: bin
   MKDOCS:
-    sh: asdf which python
+    sh: command -v asdf >/dev/null 2>&1 && asdf which python || which python3
   MODULE:
     sh: go list -m -f '{{.Path}}'
   ALL_PKGS:
