@@ -4,6 +4,10 @@ A personal companion to *Learning Go* that mixes short-form notes with runnable 
 experiments. Each chapter mirrors the book structure so you can jump between
 narrative explanations and the matching Go programs under `chNN/`.
 
+The notes can be accessed on the GitHub Pages site for this repository:
+
+[Learn Go Notes](https://jcouball.github.io/learn-go/)
+
 ## Installation
 
 ### Prerequisites
