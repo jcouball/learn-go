@@ -14,3 +14,7 @@ initializers
 Javascript
 JavaScript
 goto
+Variadic
+variadic
+goroutines
+Goroutines
