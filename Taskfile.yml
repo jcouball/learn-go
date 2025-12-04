@@ -177,18 +177,25 @@ tasks:
       vars: [PKG]
 
   ci:
-    desc: fmt, vet, test, prose-lint, build-examples
+    desc: fmt, vet, test, prose-lint, build-examples, docs-build
     cmds:
       - task: fmt
       - task: vet
       - task: test
       - task: prose-lint
       - task: build-examples
+      - task: docs-build
 
   docs:
     desc: build MkDocs site
     cmds:
       - '{{.MKDOCS}} -m mkdocs build'
+    silent: true
+
+  docs-build:
+    desc: build MkDocs site with strict mode (fails on warnings)
+    cmds:
+      - '{{.MKDOCS}} -m mkdocs build --strict'
     silent: true
 
   docs-serve:
