@@ -18,3 +18,11 @@ Variadic
 variadic
 goroutines
 Goroutines
+Cgo
+dereferenced
+dereference
+dereferencing
+nonpointer
+deallocation
+gibibytes
+VMs
